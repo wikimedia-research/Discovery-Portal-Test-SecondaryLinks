@@ -1,0 +1,28 @@
+---
+title: "Report on Wikipedia Portal A/B Test"
+subtitle: "Collapsing Secondary Links (Wikipedia in Other Languages)"
+author:
+- Mikhail Popov (Analysis & Report)
+- Jan Drewniak (UX Engineering)
+- Deborah Tankersley (Product Management)
+date: "June 10, 2016"
+fontsize: 11pt
+geometry: margin=0.5in
+output:
+  pdf_document:
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 7.5
+    includes:
+      in_header: header.tex
+    latex_engine: xelatex
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+\renewcommand{\abstractname}{Executive Summary}
+\begin{abstract}
+...
+\end{abstract}
