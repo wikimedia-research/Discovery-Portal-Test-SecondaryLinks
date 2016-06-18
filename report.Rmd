@@ -1,13 +1,13 @@
 ---
 title: "Report on Wikipedia Portal A/B Test"
-subtitle: "Collapsing Secondary Links (Wikipedia in Other Languages)"
+subtitle: "Collapsing links to Wikipedia in other languages"
 author:
 - Mikhail Popov (Analysis & Report)
 - Jan Drewniak (UX Engineering)
 - Deborah Tankersley (Product Management)
-date: "June 10, 2016"
+date: "17 June 2016"
 fontsize: 11pt
-geometry: margin=0.5in
+geometry: margin=1in
 output:
   pdf_document:
     fig_caption: yes
@@ -24,5 +24,96 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 \renewcommand{\abstractname}{Executive Summary}
 \begin{abstract}
-...
+One of Discovery's Wikipedia Portal team's goals is to make wikipedia.org a more inviting experience. One thing that worried us, from a user experience perspective, was the large section with links to Wikipedia in all the different languages. Specifically, we were worried it might be overwhelming to a new user. To that end, we propose a design change wherein that section is made optional and redesigned to have a cleaner, columnar layout.
+
+We ran A/B test to assess the effect of this change for a week, from 6 June 2016 through 14 June 2016. The test group consisted of 3019 users who received the cleaner design while the control group consisted of 2560 users who received the current design.
+
+We found that the test group had a 3.64\% higher probability of interacting with the page and was 1.07 times more likely to engage with the page than the control group. Furthermore, although both groups received the dynamic primary link feature, users in the test group had a 6.82\% higher probability (1.09 times more likely) of visiting a Wikipedia in their most preferred language.
+
+Our main goal with this design change was to decrease the bounce rate (increase the engagement rate). We saw a significant improvement in how people engaged with the page when given the cleaner variation, which suggests that we should proceed with this change.
 \end{abstract}
+
+## Introduction
+
+One of Discovery's Wikipedia Portal team's goals is to make wikipedia.org a more inviting experience. We realized that a giant section with links to Wikipedia in various languages may be overwhelming and off-putting to somebody who visits the page for the first time. The giant section with links also means that the user has to scroll quite a bit before they see links to Wikipedia's sister websites. Our internal user researched showed that a lot of visitors are not even aware of that particular section, and this aligns with the low clickthrough rate we have recorded for that particular section.
+
+After we deployed the dynamic "top 10" link resorting -- wherein we detect the user's preferred languages and then find Wikipedias matching those languages and show those links around the globe -- we decided that it was time to test a new design. In the new design, the links for languages with 1000000+, 100000+, 10000+, 1000+, and 100+ articles are moved to a modal that is only accessible by clicking a button. The design does not remove the ranked list, but makes it optional for the visitor. Since the primary motivation in clicking one of these links is to visit the Wikipedia in the user's language, the dynamic links that reflect the user's language preference meet that need. If the portal visitor wishes to go to a particular Wikipedia that is in a different language, they can still do that. Figure \ref{fig:wikipedia_portal} shows what this design change looks like.
+
+\newpage
+
+\begin{landscape}
+
+\vspace*{\fill}
+
+\begin{figure}[h!]
+    \centering
+    \caption{Screenshots of Wikipedia Portal (wikipedia.org) showing the current (baseline) experience and the redesign we tested.}
+    \begin{subfigure}[t]{0.3\linewidth}
+        \includegraphics[width=\textwidth]{figures/WP_A}
+        \caption{The current design}
+        \label{fig:portal_baseline}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[t]{0.3\linewidth}
+        \includegraphics[width=\textwidth]{figures/WP_B-1}
+        \caption{The proposed design adjustment that aims to make the page cleaner.}
+        \label{fig:portal_test_collapsed}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[t]{0.3\linewidth}
+        \includegraphics[width=\textwidth]{figures/WP_B-2}
+        \caption{Clicking the box reveals the modal with the "secondary" links to Wikipedia in other languages.}
+        \label{fig:portal_test_revealed}
+    \end{subfigure}
+    \label{fig:wikipedia_portal}
+\end{figure}
+
+\vspace*{\fill}
+
+\begin{table}[h!]
+\sffamily
+\caption{Summary of analysis comparing Test Group (T) with Controls (C). Estimated quantities have 95\% Credible Intervals in parentheses. Statistically significant results are highlighted.}
+\centering
+\renewcommand{\arraystretch}{1.5}% for the vertical padding
+\begin{tabular}{p{2.7in}|p{0.4in}|p{0.4in}|p{0.5in}|p{0.5in}|p{1.5in}|p{1in}|p{1in}}
+\hline
+\textbf{Outcome} & $N_\text{T}$ & $N_\text{C}$ & $P_\text{T}$ & $P_\text{C}$ & \textbf{Difference} ($P_\text{T} - P_\text{C}$) & \textbf{Relative Risk} & \textbf{Odds Ratio}\\
+\hline
+\rowcolor{LightYellow}
+Engaged with the page at any point & 3019 & 2560 & 59.69\% & 56.05\%  & 3.64\% (1.07\%, 6.21\%) & 1.07 (1.02, 1.11) & 1.16 (1.04, 1.29)\\
+\hline
+Used primary or secondary link to visit Wikipedia in a preferred language & 465 & 395 & 87.44\% & 84.21\% & 3.23\% (-1.36\%, 7.90\%) & 1.04 (0.98, 1.10) & 1.33 (0.89, 1.93)\\
+\hline
+\rowcolor{LightYellow}
+Used primary or secondary link to visit Wikipedia in their most preferred language & 465 & 395 & 79.95\% & 73.13\% & 6.82\% (1.06\%, 12.68\%) & 1.09 (1.01, 1.18) & 1.49 (1.06, 2.04)\\
+\hline
+\end{tabular}
+\label{tbl:bcda}
+\end{table}
+
+\vspace*{\fill}
+
+\end{landscape}
+
+\newpage
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{figures/engagement-hires}
+  \caption{User engagement with wikipedia.org}
+  \label{fig:engagement}
+\end{figure}
+
+## Methods
+
+The ["Caterpiller" A/B test](https://phabricator.wikimedia.org/T131526) ran from 6 June 2016 through 14 June 2016, utilizing the [new seeded random number generation](https://phabricator.wikimedia.org/T135558). Users have a 1 in 200 chance of being picked for event logging. Of those 0.5%, 1 in 10 were randomly selected into the A/B test. Of those 10%, users were randomly assigned the test variation or the control variation with equal probabilities.
+
+A total of 5579 users were enrolled into the test over the course of that week. 3019 of the users were randomly selected into the test group, while the remaining 2560 were selected as controls. A total of 11K landing and click events were logged. We utilized the [BCDA](https://github.com/bearloga/BCDA) package to analyze the data in R within a Bayesian framework, using a Beta-Binomial model with a Jeffreys prior.
+
+## Results and Conclusion
+
+Figure \ref{fig:engagement} shows how users in the two groups engaged differently with the page. Specifically, we can see that the bounce rate (proportion of sessions with no action) decreased in the test group that received the cleaner user experience. Table \ref{tbl:bcda} summarizes the results of the analysis.
+
+Notably, we found that the test group had a 3.64% higher probability of interacting with the page and was 1.07 times more likely to engage with the page than the control group. In other words, the control group was 1.07 times more likely to bounce. Furthermore, although both groups received the dynamic primary link feature, users in the test group had a 6.82% higher probability (1.09 times more likely) of visiting a Wikipedia in their most preferred language.
+
+Our main goal with this design change was to decrease the bounce rate (increase the engagement rate). We saw a significant improvement in how people engaged with the page when given the cleaner variation, which suggests that we should proceed with this change.

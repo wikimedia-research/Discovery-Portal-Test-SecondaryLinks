@@ -6,6 +6,7 @@ library(cowplot)
 
 events <- tbl_df(readr::read_rds("data/portal-secondary-link-collaprse-test-refined.rds"))
 
+## Some stats for the report:
 events %>%
   dplyr::distinct(session_id, test_group) %>%
   group_by(test_group) %>%
@@ -24,6 +25,36 @@ valid_seshs <- events %>%
   group_by(session_id) %>%
   summarize(`sections clicked on` = length(unique(section_used)) - 1) %>%
   keep_where(`sections clicked on` < 2) %>%
+  ungroup %>%
+  { .$session_id }
+nonclickthrough_seshs <- events %>%
+  group_by(session_id) %>%
+  summarize(clickthrough = any(type == "clickthrough")) %>%
+  keep_where(!clickthrough) %>%
+  ungroup %>%
+  { .$session_id }
+search_seshs <- events %>%
+  group_by(session_id) %>%
+  summarize(clickthrough = any(section_used == "search")) %>%
+  keep_where(clickthrough) %>%
+  ungroup %>%
+  { .$session_id }
+primary_link_clickthrough_seshs <- events %>%
+  group_by(session_id) %>%
+  summarize(clickthrough = any(section_used == "primary links")) %>%
+  keep_where(clickthrough) %>%
+  ungroup %>%
+  { .$session_id }
+secondary_link_clickthrough_seshs <- events %>%
+  group_by(session_id) %>%
+  summarize(clickthrough = any(section_used == "secondary links")) %>%
+  keep_where(clickthrough) %>%
+  ungroup %>%
+  { .$session_id }
+other_projects_clickthrough_seshs <- events %>%
+  group_by(session_id) %>%
+  summarize(clickthrough = any(section_used == "other projects")) %>%
+  keep_where(clickthrough) %>%
   ungroup %>%
   { .$session_id }
 
@@ -65,42 +96,6 @@ events %>%
   geom_bar(stat = "identity", width = 0.5) +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.1)
 
-## Let's take a look at what the 50 "non-valid" sessions look like:
-events %>%
-  keep_where(!session_id %in% valid_seshs) %>%
-  View()
-
-nonclickthrough_seshs <- events %>%
-  group_by(session_id) %>%
-  summarize(clickthrough = any(type == "clickthrough")) %>%
-  keep_where(!clickthrough) %>%
-  ungroup %>%
-  { .$session_id }
-search_seshs <- events %>%
-  group_by(session_id) %>%
-  summarize(clickthrough = any(section_used == "search")) %>%
-  keep_where(clickthrough) %>%
-  ungroup %>%
-  { .$session_id }
-primary_link_clickthrough_seshs <- events %>%
-  group_by(session_id) %>%
-  summarize(clickthrough = any(section_used == "primary links")) %>%
-  keep_where(clickthrough) %>%
-  ungroup %>%
-  { .$session_id }
-secondary_link_clickthrough_seshs <- events %>%
-  group_by(session_id) %>%
-  summarize(clickthrough = any(section_used == "secondary links")) %>%
-  keep_where(clickthrough) %>%
-  ungroup %>%
-  { .$session_id }
-other_projects_clickthrough_seshs <- events %>%
-  group_by(session_id) %>%
-  summarize(clickthrough = any(section_used == "other projects")) %>%
-  keep_where(clickthrough) %>%
-  ungroup %>%
-  { .$session_id }
-
 temp <- events %>%
   keep_where(session_id %in% nonclickthrough_seshs) %>%
   dplyr::distinct(session_id, test_group) %>%
@@ -119,7 +114,7 @@ p1 <- ggplot(data = temp, aes(y = prop_group, x = factor(1), fill = test_group))
                                 polloi::compress(n_group, 1)),
                 vjust = -1),
             position = position_dodge(width = 1)) +
-  ggtitle("Wikipedia Portal visitors' engagement and abandonment",
+  ggtitle("Wikipedia Portal visitors' engagement",
           subtitle = "A/B Test of Collapsing Secondary Links") +
   scale_y_continuous("Proportion of sessions", labels = scales::percent_format(),
                      limits = c(0, 0.7), breaks = seq(0, 0.7, 0.1)) +
@@ -185,8 +180,42 @@ p2 <- ggplot(ctr_by_section, aes(x = factor(1), y = ctr, fill = test_group)) +
         strip.background = element_rect(fill = "gray20", color = "white"),
         strip.text = element_text(color = "white", face = "bold"),
         axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.x = element_blank())
-plot_grid(p1, p2, rel_widths = c(1, 2))
+(p <- plot_grid(p1, p2, rel_widths = c(1, 2)))
+ggsave("engagement-hires.png", p, path = "figures", width = 14, height = 7, units = "in", dpi = 300)
 
 events %>%
   keep_where(session_id %in% union(secondary_link_clickthrough_seshs, other_projects_clickthrough_seshs)) %>%
   View
+
+events %>%
+  keep_where(session_id %in% valid_seshs & !is.na(section_used)) %>%
+  keep_where(session_id %in% union(primary_link_clickthrough_seshs, secondary_link_clickthrough_seshs)) %>%
+  group_by(test_group) %>%
+  summarize(visited_preferred = sum(`wiki matches a preferred language`),
+            visited_most_preferred = sum(`wiki matches most preferred language`),
+            total = n()) %>%
+  ungroup %>%
+  mutate(preferred_prop = visited_preferred/total,
+         most_preferred_prop = visited_most_preferred/total,
+         preferred_se = sqrt((preferred_prop * (1 - preferred_prop))/total),
+         most_preferred_se = sqrt((most_preferred_prop * (1 - most_preferred_prop))/total)) %>%
+  dplyr::select(-c(total, visited_preferred, visited_most_preferred)) %>%
+  gather(var, prop, -test_group) %>%
+  mutate(type = sub("(most_)?preferred_((se)|(prop))", "\\2", var),
+         visited = sub("((most_)?preferred)_((se)|(prop))", "\\1", var)) %>%
+  dplyr::select(-var) %>%
+  spread(type, prop) %>%
+  ggplot(aes(y = prop, x = visited, fill = test_group)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.9) +
+  geom_text(aes(y = prop + qnorm(0.975) * se + 0.05, label = sprintf("%.2f%%", 100 * prop)),
+            color = "black", position = position_dodge(width = 0.9)) +
+  geom_errorbar(aes(ymin = prop + qnorm(0.025) * se, ymax = prop + qnorm(0.975) * se),
+                position = position_dodge(width = 0.9), width = 0.25) +
+  scale_y_continuous("Proportion of sessions", labels = scales::percent_format(),
+                     limits = c(0, 1), breaks = seq(0, 1, 0.1)) +
+  scale_fill_brewer("Group", type = "qual", palette = "Set1") +
+  scale_x_discrete("Visited Wikipedia", limits = c("preferred", "most_preferred"),
+                   labels = c("in one of their preferred languages", "in their most preferred language")) +
+  ggtitle("The language of the Wikipedia visited via a primary or secondary link") +
+  ggthemes::theme_tufte(base_size = 12, base_family = "Gill Sans") +
+  theme(legend.position = "bottom")
