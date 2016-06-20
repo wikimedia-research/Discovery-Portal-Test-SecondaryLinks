@@ -5,7 +5,8 @@ author:
 - Mikhail Popov (Analysis & Report)
 - Jan Drewniak (UX Engineering)
 - Deborah Tankersley (Product Management)
-date: "17 June 2016"
+- Trey Jones (Review)
+date: "20 June 2016"
 fontsize: 11pt
 geometry: margin=1in
 output:
@@ -72,7 +73,7 @@ After we deployed the dynamic "top 10" link resorting -- wherein we detect the u
 
 \begin{table}[h!]
 \sffamily
-\caption{Summary of analysis comparing Test Group (T) with Controls (C). Estimated quantities have 95\% Credible Intervals in parentheses. Statistically significant results are highlighted.}
+\caption{Summary of analysis comparing Test Group (T) with Controls (C). $N$ is the number of sessions and $P$ is the probability of the outcome in a session. Estimated quantities have 95\% Credible Intervals in parentheses. Statistically significant results are highlighted.}
 \centering
 \renewcommand{\arraystretch}{1.5}% for the vertical padding
 \begin{tabular}{p{2.7in}|p{0.4in}|p{0.4in}|p{0.5in}|p{0.5in}|p{1.5in}|p{1in}|p{1in}}
